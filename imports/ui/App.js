@@ -1,9 +1,9 @@
-import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import { Meteor } from 'meteor/meteor';
-import { withTracker } from 'meteor/react-meteor-data';
+import React, { Component } from 'react';
 
-import { Tasks } from '../api/tasks.js';
+import { connect } from 'react-redux';
+
+import { toggleCompletedVisibility } from '../store/actions';
 
 import Task from './Task.js';
 import AccountsUIWrapper from './AccountsUIWrapper.js';
@@ -13,32 +13,22 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      hideCompleted: false,
-    };
+    this.state = { newTask: '' };
   }
 
   handleSubmit(event) {
     event.preventDefault();
 
-    // Find the text field via the React ref
-    const text = ReactDOM.findDOMNode(this.refs.textInput).value.trim();
+    const text = this.state.newTask
 
-    Meteor.call('tasks.insert', text);
-
-    // Clear form
-    ReactDOM.findDOMNode(this.refs.textInput).value = '';
-  }
-
-  toggleHideCompleted() {
-    this.setState({
-      hideCompleted: !this.state.hideCompleted,
+    Meteor.call('tasks.insert', text, (err, res) => {
+      this.setState({ newTask: '' })
     });
   }
 
   renderTasks() {
     let filteredTasks = this.props.tasks;
-    if (this.state.hideCompleted) {
+    if (this.props.completedTaskVisibility) {
       filteredTasks = filteredTasks.filter(task => !task.checked);
     }
     return filteredTasks.map((task) => {
@@ -65,8 +55,8 @@ class App extends Component {
             <input
               type="checkbox"
               readOnly
-              checked={this.state.hideCompleted}
-              onClick={this.toggleHideCompleted.bind(this)}
+              checked={this.props.completedTaskVisibility}
+              onClick={() => { this.props.toggleHideCompleted(this.props.completedTaskVisibility) }}
             />
             Hide Completed Tasks
           </label>
@@ -77,7 +67,8 @@ class App extends Component {
             <form className="new-task" onSubmit={this.handleSubmit.bind(this)} >
               <input
                 type="text"
-                ref="textInput"
+                value={this.state.newTask}
+                onChange={({ target: { value } }) => { this.setState({ newTask: value }) }}
                 placeholder="Type to add new tasks"
               />
             </form> : ''
@@ -92,12 +83,21 @@ class App extends Component {
   }
 }
 
-export default withTracker(() => {
-  Meteor.subscribe('tasks');
+const mapStateToProps = ({ user, tasks, completedTaskVisibility }) => {
+  const incompleteCount = tasks.reduce(t => t.checked ? 0 : 1, 0)
 
   return {
-    tasks: Tasks.find({}, { sort: { createdAt: -1 } }).fetch(),
-    incompleteCount: Tasks.find({ checked: { $ne: true } }).count(),
-    currentUser: Meteor.user(),
-  };
-})(App);
+    completedTaskVisibility,
+    tasks,
+    incompleteCount,
+    currentUser: user
+  }
+}
+
+const mapDispatchToProps = (dispatch) => ({
+  toggleHideCompleted: (current) => {
+    dispatch(toggleCompletedVisibility(!current))
+  }
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(App)

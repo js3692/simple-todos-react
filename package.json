@@ -11,8 +11,8 @@
     "@babel/runtime": "^7.1.5",
     "classnames": "^2.2.6",
     "meteor-node-stubs": "^0.4.1",
-    "react": "^16.1.1",
-    "react-dom": "^16.1.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
     "react-redux": "^7.0.2",
     "redux": "^4.0.1",
     "redux-devtools-extension": "^2.13.8",
@@ -30,11 +30,17 @@
   },
   "eslintConfig": {
     "parserOptions": {
-      "ecmaVersion": 6,
+      "ecmaVersion": 9,
       "sourceType": "module",
       "ecmaFeatures": {
         "jsx": true
       }
+    },
+    "env": {
+      "browser": true
+    },
+    "rules": {
+      "react/prop-types": 0
     },
     "extends": [
       "eslint:recommended",
