@@ -84,7 +84,7 @@ class App extends Component {
 }
 
 const mapStateToProps = ({ user, tasks, completedTaskVisibility }) => {
-  const incompleteCount = tasks.reduce(t => t.checked ? 0 : 1, 0)
+  const incompleteCount = tasks.reduce((prev, t) => (prev + (t.checked ? 0 : 1)), 0)
 
   return {
     completedTaskVisibility,
